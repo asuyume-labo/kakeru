@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><base target="_top">
+<title>KAKERU わたしのいまここ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column like a scoring sheet; a sticky progress bar while answering, sheet sections stacked after. */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --ink:#14212b; --muted:#566775; --line:#d6dee4; --soft:#e8eef2;
+  --accent:#2453a6; --accent-soft:#e3ebf8;
+  --good:#2b8653; --good-soft:#e2f2e8; --warn:#a77406; --warn-soft:#f8efda; --crit:#5b5bb0; --crit-soft:#e9e9f7;
+  --band:#14212b; --band-ink:#ffffff; --band-muted:#a9b7c2; --band-line:#3a4b58; --gold:#f2c46a;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-body:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --band:#080d11; --band-line:#2a3946; --bg:#0e161c; --surface:#16212a; --ink:#e5ecf1; --muted:#97a8b5; --line:#2a3946; --soft:#1d2a34;
+  --accent:#7aa5ec; --accent-soft:#1e2d45;
+  --good:#5cc28a; --good-soft:#173226; --warn:#e3ae4b; --warn-soft:#3a2e15; --crit:#a3a3f0; --crit-soft:#25254a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --band:#080d11; --band-line:#2a3946; --bg:#0e161c; --surface:#16212a; --ink:#e5ecf1; --muted:#97a8b5; --line:#2a3946; --soft:#1d2a34;
+  --accent:#7aa5ec; --accent-soft:#1e2d45;
+  --good:#5cc28a; --good-soft:#173226; --warn:#e3ae4b; --warn-soft:#3a2e15; --crit:#a3a3f0; --crit-soft:#25254a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.75;padding-block:0 48px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brandbar{background:var(--band);color:var(--band-ink);margin-bottom:8px}
+.brandbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-block:14px}
+.brandbar .left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0}
+.brandbar img{height:22px;width:auto;max-width:100%;display:block}
+.product{font-family:var(--f-num);font-weight:600;font-size:20px;letter-spacing:.28em;color:var(--band-ink);border-left:1px solid var(--band-line);padding-left:14px;line-height:1}
+.brandbar .proto{color:var(--band-muted);border-color:var(--band-line)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.35;margin:0}
+h1{font-size:26px;font-weight:900}
+h2{font-size:19px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.stack{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--surface);border-radius:8px;padding:12px 22px;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.row.end{justify-content:flex-end}
+.row.between{justify-content:space-between}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:20px 12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:900;font-size:15px;letter-spacing:.04em}
+.brand span{color:var(--accent)}
+.proto{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted)}
+
+/* intro */
+.hero{padding-block:16px 8px}
+.hero p{max-width:60ch;margin-top:10px}
+.hero-title{font-size:34px;letter-spacing:.06em;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.hero-sub{font-size:16px;font-weight:500;letter-spacing:.08em;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:4px}
+.facts div{border-top:2px solid var(--ink);padding-top:8px}
+.facts b{display:block;font-family:var(--f-num);font-size:20px}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{width:20px;height:20px;margin-top:4px;flex:none;accent-color:var(--accent)}
+ul.plain{margin:0;padding-left:1.2em}
+
+/* attributes */
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:13px;font-weight:700}
+.field input,.field select{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+
+/* question pages */
+.progress{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:10px;z-index:5}
+.bar{height:6px;background:var(--soft);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.qlegend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
+.q{padding-block:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.q:first-of-type{border-top:none}
+.qtext{font-weight:500}
+.qno{font-family:var(--f-num);color:var(--muted);font-size:12px;margin-right:8px}
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.scale button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;line-height:1.25}
+.scale button b{font-family:var(--f-num);font-size:16px}
+.scale button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:320px}
+.yn button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:12px;font-weight:700}
+.yn button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+
+/* result */
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.meta{font-size:12px;color:var(--muted);text-align:right}
+.alert{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface);border-radius:10px;padding:16px 18px}
+.alert h3{color:var(--ink);font-size:15px}
+.summary{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.type-name{font-family:var(--f-display);font-size:30px;font-weight:900;line-height:1.2}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.kpi{border-top:1px solid var(--line);padding-top:8px}
+.kpi .v{font-family:var(--f-num);font-size:30px;font-weight:600;line-height:1.1}
+.kpi .v small{font-size:13px;color:var(--muted);font-weight:500}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 10px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.radar-box{overflow-x:auto}
+.radar-box svg{display:block;width:100%;max-width:520px;margin:0 auto;height:auto}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini-list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.mini-list div{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.msg{border-left:3px solid var(--accent);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:6px}
+.msg .why{font-size:13px;color:var(--muted)}
+.msg .tag{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.04em}
+.sdt{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.sdt-row{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3em;gap:10px;align-items:center;font-size:13px}
+.sdt-track{height:10px;background:var(--soft);border-radius:999px;overflow:hidden}
+.sdt-track i{display:block;height:100%;background:var(--muted)}
+.sdt-row.low .sdt-track i{background:var(--accent)}
+.sdt-row.low span:first-child{font-weight:700;color:var(--accent)}
+.cat-table{width:100%;border-collapse:collapse;font-size:14px}
+.cat-table th,.cat-table td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.cat-table th{font-size:12px;color:var(--muted);font-weight:500}
+.cat-table td.sc{font-family:var(--f-num);text-align:right;white-space:nowrap}
+.cat-name{font-weight:700;white-space:nowrap}
+.op{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px}
+.op-k{font-family:var(--f-num);color:var(--accent);font-weight:600}
+.care{counter-reset:c;display:flex;flex-direction:column;gap:8px;margin:10px 0 0;padding:0;list-style:none}
+.care li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px}
+.care li::before{counter-increment:c;content:counter(c);font-family:var(--f-num);font-weight:600;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px}
+.quote{background:var(--soft);border-radius:8px;padding:12px 14px}
+.notes{font-size:13px;color:var(--muted)}
+.tel{font-family:var(--f-num);user-select:all}
+
+/* debug */
+details.debug{border:1px dashed var(--muted);border-radius:10px;padding:14px 16px;background:var(--surface)}
+details.debug summary{cursor:pointer;font-weight:700}
+.dbg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.dbg-grid button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:10px;text-align:left;font-size:13px}
+.dbg-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.dbg-table td,.dbg-table th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+.scroll{overflow-x:auto}
+textarea{width:100%;font-family:var(--f-num);font-size:12px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)}
+
+@media (max-width:620px){
+  .facts{grid-template-columns:1fr 1fr 1fr}
+  .fields,.summary,.two{grid-template-columns:1fr}
+  .type-name{font-size:26px}
+  .cat-table .cmt-col{display:none}
+  .cat-table td.cmt{display:block}
+}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head><body>
+
+<header class="brandbar"><div class="wrap"><div class="left"><img src="<?!= logoSrc ?>" alt="ASUYUME LABO."></div></div></header>
+<div class="wrap">
+  <main id="app"></main>
+</div>
+
+<script>
+/* ---------- データ（サーバーから受け取る） ---------- */
+const D = <?!= dataJson ?>;
+const {CATS,MARK,ITEMS,ORDER,LABELS,SAFETY,COMMENT,ONEPOINT,SELFCARE,TYPES} = D;
+const ITEM = Object.fromEntries(ITEMS.map(i=>[i.no,i]));
+const PER_PAGE = 5;
+
+/* ---------- 状態 ---------- */
+const state = {step:'intro', page:0, consent:false, minorOk:false, attrs:{name:'',email:'',email2:'',team:'',sport:'',age:'',level:'',season:'',days:'',injury:''}, a:{}, s:{S1:null,S2:null}, password:'', consentAt:null, result:null, sending:false, error:''};
+
+function band(v){return v>=70?['好調','good',0]:v>=50?['もう一歩','warn',1]:['充電が必要','crit',2]}
+
+/* ---------- 共通 ---------- */
+const app = document.getElementById('app');
+const esc = t => String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+function go(step,page){state.step=step; if(page!==undefined) state.page=page; render(); window.scrollTo({top:0});}
+
+function render(){
+  if(state.step==='intro') return renderIntro();
+  if(state.step==='attrs') return renderAttrs();
+  if(state.step==='q') return renderQ();
+  if(state.step==='safety') return renderSafety();
+  if(state.step==='result') return renderResult();
+}
+
+/* ---------- 画面：はじめに ---------- */
+function renderIntro(){
+  app.innerHTML = `
+  <section class="stack">
+    <div class="hero">
+      <div class="eyebrow">KAKERU ／ ATHLETE CONDITION CHECK</div>
+      <h1 class="hero-title">KAKERU<span class="hero-sub">わたしのいまここ</span></h1>
+      <p class="muted">最近2週間をふり返り、あなたの強みと次の一歩をお届けします。</p>
+    </div>
+    <div class="facts">
+      <div><b>約5分</b><span class="small muted">所要時間</span></div>
+      <div><b>40<span class="small">＋2問</span></b><span class="small muted">5段階で回答</span></div>
+      <div><b>10軸</b><span class="small muted">フィードバック</span></div>
+    </div>
+    <div class="card stack">
+      <h2>回答の前に</h2>
+      <ul class="plain small">
+        <li>このチェックは医学的な診断ではありません。気づきとセルフケア、相談のきっかけにするためのものです。</li>
+        <li>回答と結果はアスユメLabo.が管理し、あなた本人にお届けします。チーム・学校・競技団体には、個人の回答や結果を共有しません。</li>
+        <li>回答に心身の安全に関わるサインがあった場合は、アスユメLabo.が内容を確認し、対応を判断します。</li>
+        <li>健康に関わる情報（要配慮個人情報）を扱います。結果は受検IDで管理し、3年経過後に自動で削除します。</li>
+        <li>18歳未満の方は、保護者の同意を得たうえで回答してください。</li>
+      </ul>
+      <label class="check"><input type="checkbox" id="c-consent" ${state.consent?'checked':''}><span>上記の内容を理解し、同意して回答します</span></label>
+      <label class="check"><input type="checkbox" id="c-minor" ${state.minorOk?'checked':''}><span class="small">18歳未満の場合：保護者の同意を得ています（18歳以上の方もチェックしてください）</span></label>
+      ${D.requirePassword?`<div class="field" style="max-width:260px"><label for="c-pass">受検パスワード</label><input id="c-pass" inputmode="numeric" autocomplete="off" value="${esc(state.password)}" placeholder="案内に記載の番号"></div>`:''}
+      <p class="small" id="intro-err" style="color:var(--crit)" ${state.error?'':'hidden'}>${esc(state.error)}</p>
+      <div class="row end"><button class="btn" id="b-start" ${state.consent&&state.minorOk?'':'disabled'}>はじめる</button></div>
+    </div>
+  </section>`;
+  const upd=()=>{state.consent=c1.checked;state.minorOk=c2.checked;document.getElementById('b-start').disabled=!(state.consent&&state.minorOk)};
+  const c1=document.getElementById('c-consent'), c2=document.getElementById('c-minor');
+  c1.onchange=upd; c2.onchange=upd;
+  document.getElementById('b-start').onclick=()=>{
+    state.consentAt = state.consentAt || new Date().toISOString();
+    if(!D.requirePassword){ state.error=''; return go('attrs'); }
+    state.password=document.getElementById('c-pass').value.trim();
+    const btn=document.getElementById('b-start'); btn.disabled=true; btn.textContent='確認中…';
+    google.script.run.withSuccessHandler(ok=>{
+      if(ok){ state.error=''; go('attrs'); }
+      else { state.error='パスワードが違います。案内に記載の番号を入力してください。'; renderIntro(); }
+    }).withFailureHandler(()=>{ state.error='通信に失敗しました。時間をおいてもう一度お試しください。'; renderIntro(); }).checkPassword(state.password);
+  };
+  bindDebug();
+}
+
+/* ---------- 画面：属性 ---------- */
+function renderAttrs(){
+  const t=state.attrs;
+  const sel=(id,label,opts)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}"><option value="">選択してください</option>${opts.map(o=>`<option ${t[id.slice(2)]===o?'selected':''}>${o}</option>`).join('')}</select></div>`;
+  app.innerHTML=`
+  <section class="stack">
+    <div><div class="eyebrow">STEP 1 / 3</div><h2>あなたについて</h2><p class="small muted">結果はご入力のメールアドレスにお送りします。* 以外は空欄でも構いません。</p></div>
+    <div class="card fields">
+      <div class="field"><label for="a-name">お名前（ニックネーム可）<span style="color:var(--crit)"> *</span></label><input id="a-name" value="${esc(t.name)}" autocomplete="name"></div>
+      <div class="field"><label for="a-team">所属チーム・学校（任意）</label><input id="a-team" value="${esc(t.team)}"></div>
+      <div class="field"><label for="a-email">結果を受け取るメールアドレス<span style="color:var(--crit)"> *</span></label><input id="a-email" type="email" value="${esc(t.email)}" autocomplete="email" inputmode="email"></div>
+      <div class="field"><label for="a-email2">メールアドレス（確認）<span style="color:var(--crit)"> *</span></label><input id="a-email2" type="email" value="${esc(t.email2)}" autocomplete="off" inputmode="email"></div>
+      <div class="field"><label for="a-sport">競技種目</label><input id="a-sport" value="${esc(t.sport)}" placeholder="例：陸上競技（長距離）"></div>
+      ${sel('a-age','年代',['高校生','大学生','社会人','プロ','その他'])}
+      ${sel('a-level','競技レベル',['地域','全国','国際'])}
+      ${sel('a-season','現在の状況',['準備期（試合に向けてトレーニング中）','試合期（大会シーズン中）','移行期（オフ・休養中）','その他'])}
+      ${sel('a-days','直近の大会から',['1週間以内','1か月以内','1か月以上前','直近の大会なし'])}
+      ${sel('a-injury','ケガによる練習制限',['なし','一部制限あり','練習できていない'])}
+    </div>
+    <p class="small" id="attr-err" style="color:var(--crit)" hidden></p>
+    <div class="row between"><button class="btn ghost" id="b-back">戻る</button><button class="btn" id="b-next">質問に進む</button></div>
+  </section>`;
+  const save=()=>{['name','email','email2','team','sport','age','level','season','days','injury'].forEach(k=>t[k]=document.getElementById('a-'+k).value.trim())};
+  document.getElementById('b-back').onclick=()=>{save();go('intro')};
+  document.getElementById('b-next').onclick=()=>{
+    save();
+    const err=document.getElementById('attr-err');
+    const msg = !t.name ? 'お名前を入力してください。'
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t.email) ? 'メールアドレスの形式を確認してください。'
+      : t.email!==t.email2 ? '確認用のメールアドレスが一致しません。' : '';
+    if(msg){ err.textContent=msg; err.hidden=false; return; }
+    go('q',0);
+  };
+}
+
+/* ---------- 画面：設問 ---------- */
+const PAGES = Math.ceil(ORDER.length/PER_PAGE);
+function answeredCount(){return ORDER.filter(n=>state.a[n]).length}
+function renderQ(){
+  const nos = ORDER.slice(state.page*PER_PAGE,(state.page+1)*PER_PAGE);
+  const pct = Math.round(answeredCount()/(ORDER.length+2)*100);
+  app.innerHTML=`
+  <section class="stack">
+    <div class="progress">
+      <div class="row between small"><span class="eyebrow">STEP 2 / 3　${state.page+1} / ${PAGES} ページ</span><span class="num small muted">${answeredCount()} / 40</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+    </div>
+    <p class="small muted">最近2週間のあなたの状態に、もっとも近いものを選んでください。正解・不正解はありません。</p>
+    <div class="card">
+      ${nos.map(n=>`<div class="q"><div class="qtext"><span class="qno">Q${ORDER.indexOf(n)+1}</span>${esc(ITEM[n].text)}</div>
+        <div class="scale" role="group" aria-label="${esc(ITEM[n].text)}">${[1,2,3,4,5].map(v=>`<button type="button" data-n="${n}" data-v="${v}" aria-pressed="${state.a[n]===v}"><b>${v}</b>${LABELS[v-1].replace('\n','<br>')}</button>`).join('')}</div></div>`).join('')}
+    </div>
+    <div class="row between"><button class="btn ghost" id="b-back">戻る</button><button class="btn" id="b-next" ${nos.every(n=>state.a[n])?'':'disabled'}>${state.page===PAGES-1?'最後の確認へ':'次へ'}</button></div>
+  </section>`;
+  app.querySelectorAll('.scale button').forEach(b=>b.onclick=()=>{
+    const n=+b.dataset.n; state.a[n]=+b.dataset.v;
+    b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    document.getElementById('b-next').disabled=!nos.every(k=>state.a[k]);
+    app.querySelector('.bar i').style.width=Math.round(answeredCount()/(ORDER.length+2)*100)+'%';
+    app.querySelector('.progress .num').textContent=answeredCount()+' / 40';
+  });
+  document.getElementById('b-back').onclick=()=>state.page===0?go('attrs'):go('q',state.page-1);
+  document.getElementById('b-next').onclick=()=>state.page===PAGES-1?go('safety'):go('q',state.page+1);
+}
+
+/* ---------- 画面：安全確認 ---------- */
+function renderSafety(){
+  app.innerHTML=`
+  <section class="stack">
+    <div><div class="eyebrow">STEP 3 / 3</div><h2>最後に、2つだけ確認させてください</h2>
+    <p class="small muted">点数には含めません。あなたが安心して競技を続けられるよう、必要な相談先をお伝えするための質問です。</p></div>
+    <div class="card">
+      ${SAFETY.map(q=>`<div class="q"><div class="qtext">${esc(q.text)}</div>
+      <div class="yn" role="group">${['yes','no'].map(v=>`<button type="button" data-id="${q.id}" data-v="${v}" aria-pressed="${state.s[q.id]===v}">${v==='yes'?'はい':'いいえ'}</button>`).join('')}</div></div>`).join('')}
+    </div>
+    <div class="row between"><button class="btn ghost" id="b-back">戻る</button><button class="btn" id="b-next" ${state.s.S1&&state.s.S2?'':'disabled'}>結果を見る</button></div>
+  </section>`;
+  app.querySelectorAll('.yn button').forEach(b=>b.onclick=()=>{
+    state.s[b.dataset.id]=b.dataset.v;
+    b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    document.getElementById('b-next').disabled=!(state.s.S1&&state.s.S2);
+  });
+  document.getElementById('b-back').onclick=()=>go('q',PAGES-1);
+  document.getElementById('b-next').onclick=finish;
+}
+function finish(){
+  if(state.sending) return;
+  state.sending=true;
+  app.innerHTML=`<section class="stack" style="padding-block:48px;text-align:center"><h2>結果をまとめています…</h2><p class="small muted">数秒かかります。このままお待ちください。</p></section>`;
+  const payload={attrs:state.attrs,answers:state.a,safety:state.s,password:state.password,consentAt:state.consentAt};
+  google.script.run.withSuccessHandler(res=>{
+    state.sending=false;
+    if(!res||!res.ok){ return showSendError(res&&res.message); }
+    state.result=res.result; state.id=res.result.id; state.date=res.result.date; state.mailed=res.mailed;
+    go('result');
+  }).withFailureHandler(e=>{ state.sending=false; showSendError(); }).submitResult(payload);
+}
+function showSendError(message){
+  app.innerHTML=`<section class="stack" style="padding-block:40px"><h2>送信できませんでした</h2>
+    <p class="small">${esc(message||'通信に失敗しました。回答は残っているので、もう一度送信してください。')}</p>
+    <div class="row"><button class="btn" id="b-retry">もう一度送信する</button><button class="btn ghost" id="b-back">回答に戻る</button></div></section>`;
+  document.getElementById('b-retry').onclick=finish;
+  document.getElementById('b-back').onclick=()=>go('safety');
+}
+
+/* ---------- レーダー ---------- */
+function radar(s){
+  const W=520,H=440,cx=260,cy=220,R=150,n=10;
+  const pt=(i,v)=>{const ang=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(ang)*R*v/100, cy+Math.sin(ang)*R*v/100]};
+  const ring=v=>Array.from({length:n},(_,i)=>pt(i,v).join(',')).join(' ');
+  const poly=Array.from({length:n},(_,i)=>pt(i,s[i+1]).join(',')).join(' ');
+  let g='';
+  g+=`<polygon points="${ring(100)}" fill="var(--soft)" stroke="var(--line)"/>`;
+  g+=`<polygon points="${ring(70)}" fill="none" stroke="var(--good)" stroke-dasharray="4 4" stroke-opacity=".7"/>`;
+  g+=`<polygon points="${ring(50)}" fill="none" stroke="var(--crit)" stroke-dasharray="4 4" stroke-opacity=".7"/>`;
+  for(let i=0;i<n;i++){const [x,y]=pt(i,100);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`;}
+  g+=`<polygon points="${poly}" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-width="2"/>`;
+  for(let i=0;i<n;i++){
+    const v=s[i+1],[x,y]=pt(i,v),b=band(v)[1];
+    g+=`<circle cx="${x}" cy="${y}" r="4.5" fill="var(--${b})" stroke="var(--surface)" stroke-width="1.5"/>`;
+    const [lx,ly]=pt(i,122); const anchor=Math.abs(lx-cx)<8?'middle':(lx>cx?'start':'end');
+    g+=`<text x="${lx}" y="${ly}" text-anchor="${anchor}" font-size="12.5" fill="var(--ink)" font-family="var(--f-body)">${MARK[i+1]} ${CATS[i+1].name}</text>`;
+    g+=`<text x="${lx}" y="${ly+16}" text-anchor="${anchor}" font-size="12" fill="var(--muted)" font-family="var(--f-num)">${v}</text>`;
+  }
+  g+=`<text x="${cx+4}" y="${cy-R*0.70-4}" font-size="10.5" fill="var(--good)" font-family="var(--f-num)">70</text>`;
+  g+=`<text x="${cx+4}" y="${cy-R*0.50-4}" font-size="10.5" fill="var(--crit)" font-family="var(--f-num)">50</text>`;
+  return `<svg viewBox="-60 0 ${W+120} ${H}" role="img" aria-label="10カテゴリのレーダーチャート">${g}</svg>`;
+}
+function quad(r){
+  // 横：環境・成果の充実度（①〜⑥平均）、縦：内なるエネルギー（⑦⑧⑩平均）。どちらも右・上ほど良い
+  const W=260,H=200,x0=30,y0=10,w=220,h=160;
+  const bx=x0+r.envMean/100*w, by=y0+(1-r.resMean/100)*h;
+  const mx=x0+0.6*w, my=y0+0.4*h;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="タイプ判定の位置" style="width:100%;max-width:280px;height:auto">
+   <rect x="${x0}" y="${y0}" width="${mx-x0}" height="${my-y0}" fill="var(--warn-soft)"/>
+   <rect x="${mx}" y="${y0}" width="${x0+w-mx}" height="${my-y0}" fill="var(--good-soft)"/>
+   <rect x="${x0}" y="${my}" width="${mx-x0}" height="${y0+h-my}" fill="var(--crit-soft)"/>
+   <rect x="${mx}" y="${my}" width="${x0+w-mx}" height="${y0+h-my}" fill="var(--warn-soft)"/>
+   <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="var(--line)"/>
+   <text x="${x0+6}" y="${y0+16}" font-size="11" fill="var(--warn)">挑戦</text>
+   <text x="${x0+w-6}" y="${y0+16}" font-size="11" text-anchor="end" fill="var(--good)">充実</text>
+   <text x="${x0+6}" y="${y0+h-6}" font-size="11" fill="var(--crit)">回復優先</text>
+   <text x="${x0+w-6}" y="${y0+h-6}" font-size="11" text-anchor="end" fill="var(--warn)">充電</text>
+   <circle cx="${bx}" cy="${by}" r="7" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+   <text x="${x0+w/2}" y="${H-6}" font-size="10.5" text-anchor="middle" fill="var(--muted)">環境・成果の充実度 低 → 高</text>
+   <text x="12" y="${y0+h/2}" font-size="10.5" text-anchor="middle" fill="var(--muted)" transform="rotate(-90 12 ${y0+h/2})">内なるエネルギー 低 → 高</text>
+  </svg>`;
+}
+
+/* ---------- 画面：結果 ---------- */
+function attrLine(){const t=state.attrs;return [t.sport,t.age,t.level,t.season].filter(Boolean).join('／')||'属性未入力'}
+function renderResult(){
+  const r=state.result, T=TYPES[r.type];
+  const yBand = band(r.yutori);
+  const effWord = r.efficacy>=70?'しっかりある':r.efficacy>=50?'育ちつつある':'これから育てていく時期';
+  const sdtMin = Object.entries(r.sdt).sort((x,y)=>x[1]-y[1])[0][0];
+  const opCats = r.safety ? [9] : r.growth.map(g=>g[0]);
+  const careCats = r.safety ? [9] : Object.entries(r.s).map(([c,v])=>[+c,v]).filter(x=>x[1]<70).sort((x,y)=>x[1]-y[1]).slice(0,3).map(x=>x[0]);
+  const careList = (careCats.length?careCats:[r.strengths[0][0]]).map(c=>SELFCARE[c]);
+  const evText = p => p.ev.length ? 'あなたは' + p.ev.map(n=>`「${ITEM[n].text}」に${['まったくあてはまらない','あまりあてはまらない','どちらともいえない','ややあてはまる','とてもあてはまる'][state.a[n]-1]}`).join('、') + 'と答えています。' : 'あなたは、すべての質問に正直に向き合って回答しています。';
+
+  app.innerHTML=`
+  <section class="stack">
+    <div class="sheet-head">
+      <div><div class="eyebrow">KAKERU FEEDBACK SHEET</div><h1>あなたの競技コンディション</h1></div>
+      <div class="meta">受検ID <span class="num">${state.id}</span><br>${state.date}<br>${esc(attrLine())}</div>
+    </div>
+
+    ${r.safety?`<div class="alert stack">
+      <h3>よかったら、誰かに話してみませんか</h3>
+      <p class="small">正直に答えてくれて、ありがとうございます。気持ちを言葉にするだけで、少し楽になることがあります。家族や友人、チームドクターなど、話しやすい人に声をかけてみてください。</p>
+      <div class="small muted">電話で相談できる窓口：いのちの電話 <span class="tel">0570-783-556</span>　こころの健康相談統一ダイヤル <span class="tel">0570-064-556</span></div>
+    </div>`:''}
+
+    ${r.restFlag?`<div class="card stack">
+      <h3>いまは、しっかり休むことがいちばんの練習です</h3>
+      <p class="small">心と体が休息を求めているようです。睡眠と休養を優先し、疲れが続くときは身近な人や専門家に話してみてください。</p>
+    </div>`:''}
+
+    <div class="summary">
+      <div class="card">
+        <div class="eyebrow">あなたのタイプ</div>
+        <div class="type-name">${r.type}</div>
+        <p class="small muted" style="margin-top:6px">${T.line}</p>
+        <div class="kpis">
+          <div class="kpi"><div class="small muted">心身のゆとり度</div><div class="v">${r.yutori}<small> /100</small></div><span class="pill ${yBand[1]}">${['ゆとりあり','ややお疲れ気味','休息が必要'][yBand[2]]}</span></div>
+          <div class="kpi"><div class="small muted">競技コンディション</div><div class="v">${r.condition}<small> /100</small></div><span class="pill ${band(r.condition)[1]}">${band(r.condition)[0]}</span></div>
+        </div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="eyebrow" style="align-self:flex-start">環境の充実度と内なるエネルギー</div>${quad(r)}</div>
+    </div>
+
+    <div class="card">
+      <div class="row between"><h2>10カテゴリのバランス</h2><span class="small muted">外側ほど好調　<span style="color:var(--good)">点線70＝好調</span>・<span style="color:var(--crit)">点線50</span></span></div>
+      <div class="radar-box">${radar(r.s)}</div>
+    </div>
+
+    <div class="two">
+      <div class="card"><h3>あなたの強み</h3><div class="mini-list">${r.strengths.map(([c,v])=>`<div><span>${MARK[c]} ${CATS[c].name}</span><span class="num">${v}</span></div>`).join('')}</div>
+        <p class="small" style="margin-top:10px">${COMMENT[r.strengths[0][0]][0]}</p></div>
+      <div class="card"><h3>伸びしろ</h3><div class="mini-list">${r.growth.map(([c,v])=>`<div><span>${MARK[c]} ${CATS[c].name}</span><span class="num">${v}</span></div>`).join('')}</div>
+        <p class="small" style="margin-top:10px">ここを整えると、全体のコンディションが上がりやすいカテゴリです。</p></div>
+    </div>
+
+    <div class="card stack">
+      <h2>あなたへのメッセージ</h2>
+      ${(r.chosen.length?r.chosen:[null]).map(p=> p ? `<div class="msg"><span class="tag">${p.base}</span><p>${p.msg}</p><p class="why">${esc(evText(p))}</p></div>`
+        : `<div class="msg"><span class="tag">自己肯定感</span><p>${COMMENT[r.strengths[0][0]][0]}。それはあなたが積み重ねてきた力です。</p><p class="why">いちばん高かったのは「${CATS[r.strengths[0][0]].name}」（${r.strengths[0][1]}点）でした。</p></div>`).join('')}
+    </div>
+
+    ${r.safety?'':`<div class="two">
+      <div class="card"><h3>あなたの「できる」の土台 <span class="small muted">（推定）</span></h3>
+        <p style="margin-top:10px;font-family:var(--f-display);font-size:20px;font-weight:700">${effWord}</p>
+        <p class="small muted" style="margin-top:6px">${r.efficacy>=70?'課題への見通しや立ち直った経験が、自信の根拠になっています。':r.efficacy>=50?'できることは確実に増えています。小さな「できた」を言葉にすると、さらに育ちます。':'自信は、過去にできたことを思い出すところから育て直せます。'}</p></div>
+      <div class="card"><h3>心のエネルギー源 <span class="small muted">（推定）</span></h3>
+        <div class="sdt">${Object.entries(r.sdt).map(([k,v])=>`<div class="sdt-row ${k===sdtMin?'low':''}"><span>${k}</span><span class="sdt-track"><i style="width:${Math.max(v,3)}%"></i></span><span class="num">${v}</span></div>`).join('')}</div>
+        <p class="small" style="margin-top:10px">いま満たしたいのは<b>「${sdtMin}」</b>。${{自律性:'自分で選べる部分を一つ増やしましょう。',有能感:'できたことを一つ記録しましょう。',関係性:'話せる人と過ごす時間を一つ増やしましょう。'}[sdtMin]}</p></div>
+    </div>`}
+
+    <div class="card">
+      <h2>カテゴリ別の読み解き</h2>
+      <div class="scroll"><table class="cat-table" style="margin-top:8px">
+        <thead><tr><th>カテゴリ</th><th style="text-align:right">得点</th><th>区分</th><th class="cmt-col">コメント</th></tr></thead>
+        <tbody>${Object.keys(CATS).map(c=>{const v=r.s[c],b=band(v);return `<tr><td class="cat-name">${MARK[c]} ${CATS[c].name}</td><td class="sc">${v}</td><td><span class="pill ${b[1]}">${b[0]}</span></td><td class="cmt small">${COMMENT[c][b[2]]}</td></tr>`}).join('')}</tbody>
+      </table></div>
+    </div>
+
+    <div class="card stack">
+      <h2>ワンポイント</h2>
+      ${opCats.map(c=>`<div class="op"><span class="op-k">${MARK[c]}</span><div><b>${CATS[c].name}（${r.s[c]}点）</b><p>${ONEPOINT[c][0]}</p><p class="small muted">自信の源：${ONEPOINT[c][1]}</p></div></div>`).join('')}
+      ${r.safety?'':`<div class="quote"><span class="small muted">${r.type}のあなたへ</span><p>${T.msg}</p></div>`}
+    </div>
+
+    <div class="card">
+      <h2>今日からできるセルフケア</h2>
+      <ol class="care">${careList.map(t=>`<li><span>${t}</span></li>`).join('')}</ol>
+    </div>
+
+    ${(!r.safety && r.s[4]<70)?`<div class="card stack"><h2>コーチ・監督との対話のヒント</h2>
+      <p class="small muted">いきなり不満を伝えるより、「確認」から入ると話しやすくなります。</p>
+      <div class="quote">「今の練習で、自分が一番意識すべきことは何ですか？」</div></div>`:''}
+
+    ${(!r.safety && (r.burnout!=='なし'||r.slump||r.motivTilt))?`<div class="card stack"><h2>整えるとよいポイント</h2>
+      ${r.burnout!=='なし'?`<p>疲れがたまり、手応えを感じにくくなっているようです。休養と練習量を見直すと、手応えが戻ってきます。</p>`:''}
+      ${r.slump?`<p>試合での発揮度と、課題・意欲・心の状態をあわせて整えると、力を出しやすくなります。面談で一緒に整理することもできます。</p>`:''}
+      ${r.motivTilt?`<p>「周りのため」に頑張れるのはあなたの良さです。「自分のため」の目標も一つ加えると、さらに力が湧いてきます。</p>`:''}
+    </div>`:''}
+
+    ${state.s.S2==='yes'?`<div class="card stack"><h2>指導者・チームとの関わりについて</h2>
+      <p>怖い・つらいと感じる関わりがあると回答されました。あなたが我慢する必要はありません。チームや競技団体から独立した相談窓口に、匿名で相談することもできます。</p>
+      <p class="small muted">この回答はアスユメLabo.が管理し、チームや学校には共有されません。</p></div>`:''}
+
+    <div class="card notes stack">
+      <h3 style="color:var(--ink)">相談先と注意書き</h3>
+      <p>このシートは医学的な診断ではありません。心や体の疲れが続くときは、医療機関や公認心理師などの専門家に相談すると回復の近道になります。</p>
+      <p>いのちの電話 <span class="tel">0570-783-556</span>　こころの健康相談統一ダイヤル <span class="tel">0570-064-556</span></p>
+      <p>結果をもとに専門家と話したい方は、アスユメLabo.の面談（Premium）をご利用ください。</p>
+      <p>${state.mailed?`このシートのPDFを ${esc(state.attrs.email)} にお送りしました。届かない場合は迷惑メールフォルダをご確認ください。`:'メールの送信に失敗しました。お手数ですが、アスユメLabo.までご連絡ください。'}</p>
+    </div>
+
+    <div class="row end"><button class="btn ghost" id="b-reset">最初の画面に戻る</button></div>
+
+  </section>`;
+  document.getElementById('b-reset').onclick=()=>{state.a={};state.s={S1:null,S2:null};state.result=null;state.consent=false;state.minorOk=false;state.consentAt=null;go('intro')};
+  bindDebug();
+}
+
+function bindDebug(){}
+
+render();
+</script>
+
+</body></html>
